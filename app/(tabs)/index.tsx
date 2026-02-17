@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
 
 export default function HomeScreen() {
@@ -6,36 +6,70 @@ export default function HomeScreen() {
   const [sec, setSec] = useState(0);
   const [min, setMin] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [Reset, setReset] = useState(false);
-  let timer = 0;
-  let secCounter = 55;
-  let minCounter = 1;
+  const [reset, setReset] = useState(false);
+  const [unmarkedLap, setUnmarkedLap] = useState(false);
 
+  const [laps, setLaps] = useState<string[]>([]);
+  let totalMinutes = 0;
+  let totalSeconds = 0;
+  let totalMilliseconds = 0;
+
+  let timer = 0;
+  const secCounter = useRef(0);
+  const minCounter = useRef(0);
+
+  // Timer Effect
   useEffect(() => {
     timer = time;
+    if (reset) {
+      setLaps([]);
+      setReset(false);
+    }
 
     if (isRunning) {
       let start = Date.now()
       const interval = setInterval(() => {
+        console.log("sec:", sec, "secCounter:", secCounter, "Reset:", reset);
         setTime(Math.floor((Date.now() - start + timer) / 10));
         if ((Date.now() - start + timer) > 995) {
 
-          setSec(sec + secCounter)
-          secCounter++;
+          setSec(prev => prev + 1);
+          secCounter.current++;
           start = Date.now();
         }
-        if (secCounter > 60) {
-          secCounter = 0
-          setSec(sec + secCounter);
-          secCounter++;
-          setMin(min + minCounter);
-          minCounter++;
+        if (secCounter.current > 60) {
+          setMin(prev => prev + 1);
+          minCounter.current++;
+          secCounter.current = 0;
+          setSec(prev => prev + 1);
+          secCounter.current++;
         }
       }, 10);
       return () => clearInterval(interval);
     }
 
-  }, [isRunning, Reset]);
+  }, [isRunning, reset]);
+
+  // Lap Effect
+  useEffect(() => {
+    if (unmarkedLap) {
+      const newLap = min.toString().padStart(2, "0") + ":" + sec.toString().padStart(2, "0") + "." + time.toString().padStart(2, "0");
+      //console.log(newLap.split(''))
+
+      let minutes = parseInt(newLap[0] + newLap[1])
+      let seconds = parseInt(newLap[3] + newLap[4])
+      let milliseconds = parseInt(newLap[6] + newLap[7])
+
+      totalMinutes += minutes;
+      totalSeconds += seconds;
+      totalMilliseconds += milliseconds;
+      setLaps([...laps, totalMinutes.toString().padStart(2, "0") + ":" + totalSeconds.toString().padStart(2, "0") + "." + totalMilliseconds.toString().padStart(2, "0")])
+
+      console.log("laps", laps); // this logs one behind what is actually being lapped
+
+      setUnmarkedLap(false);
+    }
+  }, [unmarkedLap]);
 
   return (
     <View style={styles.container}>
@@ -53,7 +87,7 @@ export default function HomeScreen() {
             setTime(0);
             setSec(0);
             setMin(0);
-            setReset(!Reset);
+            setReset(!reset);
           }}
         >
           <Text style={styles.btnText}>
@@ -62,7 +96,7 @@ export default function HomeScreen() {
         </Pressable>
         <Pressable style={[styles.btn, { backgroundColor: "rgb(74, 74, 74)" }]}
           onPress={() => {
-
+            setUnmarkedLap(!unmarkedLap);
           }}
         >
           <Text style={styles.btnText}>
@@ -74,14 +108,11 @@ export default function HomeScreen() {
         <Text style={styles.lapsHeader}>
           Laps
         </Text>
-        <View style={styles.laps}>
+        <View style={styles.lapsBox}>
           <ScrollView>
-            <Text>hello</Text>
-            <Text>hello</Text>
-            <Text>hello</Text>
-            <Text>hello</Text>
-            <Text>hello</Text>
-            <Text>hello</Text>
+            {[...laps].reverse().map((lap, index) => (
+              <Text style={styles.lapsText} key={index}>{lap}</Text>
+            ))}
           </ScrollView>
         </View>
       </View>
@@ -123,7 +154,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignSelf: "center",
   },
-  laps: {
+  lapsBox: {
     height: 100,
     width: 300,
     backgroundColor: "rgb(164, 164, 164)",
@@ -133,5 +164,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginTop: 5,
+  },
+  lapsText: {
+    color: "black",
+    fontFamily: Platform.OS === "android" ? "monospace" : undefined,
+    fontVariant: Platform.OS === "ios" ? ["tabular-nums"] : undefined,
   }
 });
