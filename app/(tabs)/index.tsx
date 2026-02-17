@@ -111,7 +111,7 @@ export default function HomeScreen() {
         <View style={styles.lapsBox}>
           <ScrollView>
             {[...laps].reverse().map((lap, index) => (
-              <Text style={styles.lapsText} key={index}>{lap}</Text>
+              <Text style={styles.lapsText} key={index}>{lap}</Text> // lapsText isn't functioning properly
             ))}
           </ScrollView>
         </View>
@@ -166,8 +166,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   lapsText: {
-    color: "black",
+    color: "green",
     fontFamily: Platform.OS === "android" ? "monospace" : undefined,
     fontVariant: Platform.OS === "ios" ? ["tabular-nums"] : undefined,
+    fontSize: 25
   }
 });
