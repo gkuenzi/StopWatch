@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   lapsBox: {
-    height: 100,
+    height: 150,
     width: 300,
     backgroundColor: "rgb(164, 164, 164)",
     borderTopWidth: 1,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   lapsText: {
-    color: "green",
+    color: "black",
     fontFamily: Platform.OS === "android" ? "monospace" : undefined,
     fontVariant: Platform.OS === "ios" ? ["tabular-nums"] : undefined,
     fontSize: 25
